@@ -1,0 +1,183 @@
+type: edu
+files:
+- name: src/task/Main.java
+  visible: false
+  text: |-
+    package task;
+
+    import org.springframework.boot.SpringApplication;
+    import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+    @SpringBootApplication
+    public class Main {
+        public static void main(String[] args) {
+            SpringApplication.run(Main.class, args);
+        }
+    }
+  learner_created: false
+- name: build.gradle
+  visible: false
+  text: |-
+    plugins {
+        id 'java'
+        id 'org.springframework.boot' version '2.3.1.RELEASE'
+        id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    }
+
+    repositories {
+        mavenCentral()
+        maven { url "https://jitpack.io" }
+    }
+
+    sourceSets.main.resources.srcDirs = ["resources"]
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter'
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+    }
+  learner_created: false
+- name: resources/application.properties
+  visible: false
+  text: |-
+    server.port=28852
+    management.endpoints.web.exposure.include=*
+    management.endpoint.shutdown.enabled=true
+  learner_created: false
+- name: src/task/Controller.java
+  visible: true
+  text: |
+    package task;
+
+    import org.springframework.web.bind.annotation.*;
+
+    import java.util.*;
+    import java.util.concurrent.*;
+
+    @RestController
+    public class Controller {
+        final ConcurrentHashMap<Long, String> items = new ConcurrentHashMap<>(Map.of(
+                55L, "Chair",
+                99L, "Table",
+                345L, "Vase"
+        ));
+
+        final String ERROR = "Item wasn't found";
+
+        @GetMapping("/items/{id}")
+        String getItem(@PathVariable long id) {
+            String item = items.get(id);
+
+            return item != null ? item : ERROR;
+        }
+
+        // Add your code below this line and do not change the code above the line.
+
+    }
+  learner_created: false
+- name: test/Tests.java
+  visible: false
+  text: |-
+    import org.hyperskill.hstest.dynamic.DynamicTest;
+    import org.hyperskill.hstest.dynamic.input.DynamicTesting;
+    import org.hyperskill.hstest.exception.outcomes.WrongAnswer;
+    import org.hyperskill.hstest.mocks.web.response.HttpResponse;
+    import org.hyperskill.hstest.stage.SpringTest;
+
+    import org.hyperskill.hstest.testcase.CheckResult;
+    import task.Main;
+
+    import static org.hyperskill.hstest.testcase.CheckResult.wrong;
+    import static org.hyperskill.hstest.testcase.CheckResult.correct;
+
+
+    public class Tests extends SpringTest {
+
+        public Tests() {
+            super(Main.class);
+        }
+
+        static void throwIfIncorrectStatusCode(HttpResponse response, int status) {
+            if (response.getStatusCode() != status) {
+                throw new WrongAnswer(response.getRequest().getMethod() +
+                        " " + response.getRequest().getLocalUri() +
+                        " should respond with status code " + status +
+                        ", responded: " + response.getStatusCode() + "\n\n" +
+                        "Response body:\n" + response.getContent());
+            }
+        }
+
+        final String ITEMS = "/items/";
+        final String NO_ITEM = "Item wasn't found";
+
+        final int key1 = 55;
+        final int key2 = 99;
+        final int key3 = 345;
+
+        final String val1 = "Chair";
+        final String val2 = "Table";
+        final String val3 = "Vase";
+
+        final int fakeKey1 = 1000;
+        final int fakeKey2 = 999;
+
+
+        @DynamicTest
+        DynamicTesting[] dt = new DynamicTesting[]{
+                () -> testGetItem(key1, val1),
+                () -> testDeleteItem(key1, val1),
+                () -> testGetItem(key1, NO_ITEM),
+                () -> testDeleteItem(key1, NO_ITEM),
+                () -> testDeleteItem(key1, NO_ITEM),
+
+                () -> testGetItem(key2, val2),
+                () -> testDeleteItem(key2, val2),
+                () -> testGetItem(key2, NO_ITEM),
+                () -> testDeleteItem(key2, NO_ITEM),
+
+                () -> testGetItem(key3, val3),
+                () -> testDeleteItem(key3, val3),
+                () -> testGetItem(key3, NO_ITEM),
+                () -> testDeleteItem(key3, NO_ITEM),
+
+                () -> testGetItem(fakeKey1, NO_ITEM),
+                () -> testGetItem(fakeKey2, NO_ITEM),
+
+                () -> testDeleteItem(fakeKey1, NO_ITEM),
+                () -> testDeleteItem(fakeKey2, NO_ITEM)
+        };
+
+
+        CheckResult testGetItem(int key, String value) {
+            HttpResponse response = get(ITEMS + key).send();
+
+            throwIfIncorrectStatusCode(response, 200);
+
+            if (!value.equals(response.getContent())) {
+                return wrong("Expected: \"" + value + "\", received: \"" + response.getContent() + "\"");
+            }
+
+            return correct();
+        }
+
+
+        CheckResult testDeleteItem(int key, String value) {
+            HttpResponse response = delete(ITEMS + key).send();
+
+            throwIfIncorrectStatusCode(response, 200);
+
+            if (!value.equals(response.getContent())) {
+                return wrong("Expected: \"" + value + "\", received: \"" + response.getContent() + "\"");
+            }
+
+            return correct();
+        }
+
+    }
+  learner_created: false
+feedback_link: https://hyperskill.org/learn/step/14602#comment
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Mon, 06 Dec 2021 16:59:13 UTC
+record: -1

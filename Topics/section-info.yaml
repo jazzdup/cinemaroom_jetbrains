@@ -1,0 +1,8 @@
+content:
+- Threads as objects
+- Custom threads
+- Thread management
+- Thread synchronization
+- Posting and deleting data via REST
+- Handling requests with bodies
+- Exception handling

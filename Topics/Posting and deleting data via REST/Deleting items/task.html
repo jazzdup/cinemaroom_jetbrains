@@ -1,0 +1,15 @@
+<p><div class="alert alert-warning">This problem is fully supported by version 2021.9 of the EduTools plugin and newer. To avoid possible errors, please make sure that the plugin is updated. Alternatively, you can solve it using the web interface.</div></p>
+
+<p>Currently the program stores and returns items. Extend the program and add the possibility to delete items. Here are the details:</p>
+
+<p><code class="java">DELETE /items/{id}</code>: removes and returns an item with a specified <code class="java">id</code>. If there is no such item, the program returns <code class="java">Item wasn't found</code>. Status code should be <code class="java">200 (OK)</code>.</p>
+
+<p>Do not change the provided template. Just add new functionality to the code.</p>
+
+<p><strong>Example 1: </strong>Response for a <code class="java">DELETE /items/55</code> request:</p>
+
+<pre><code class="language-no-highlight">Chair</code></pre>
+
+<p><strong>Example 2: </strong>Response for a <code class="java">DELETE /items/55</code> request:</p>
+
+<pre><code class="language-no-highlight">Item wasn't found</code></pre>

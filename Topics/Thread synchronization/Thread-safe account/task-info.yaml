@@ -1,0 +1,28 @@
+type: code
+files:
+- name: src/Main.java
+  visible: true
+  text: |-
+    class Account {
+
+        private long balance = 0;
+
+        public synchronized boolean withdraw(long amount) {
+            return false;
+        }
+
+        public synchronized void deposit(long amount) {
+            // do something useful
+        }
+
+        public long getBalance() {
+            return balance;
+        }
+    }
+  learner_created: false
+feedback_link: https://hyperskill.org/learn/step/2654#comment
+status: Solved
+feedback:
+  message: <html>Correct solution</html>
+  time: Mon, 06 Dec 2021 14:17:46 UTC
+record: -1

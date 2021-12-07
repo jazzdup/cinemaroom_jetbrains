@@ -1,0 +1,23 @@
+<p><div class="alert alert-warning">This problem is fully supported by version 2021.9 of the EduTools plugin and newer. To avoid possible errors, please make sure that the plugin is updated. Alternatively, you can solve it using the web interface.</div></p>
+
+<p>Currently, the program contains the following endpoint:</p>
+
+<ul>
+	<li><code class="java">GET /items/{id}</code> — returns an item with a specified <code class="java">id</code> and responds with <code class="java">200 (OK)</code>. If an item is not present, it returns the message "Item wasn't found" and also responds with <code class="java">200 (OK)</code>.</li>
+</ul>
+
+<p>Your task is to modify the program —  it should respond with <code class="java">404 Not Found</code> status code when an item with a specified <code class="java">id</code> is not found.</p>
+
+<p>Do not change the content of the <code class="java">Map</code>.</p>
+
+<p><strong>Example 1:</strong></p>
+
+<p>Request: <code class="java">GET /items/1</code></p>
+
+<p>Status code: <code class="java">404 Not Found</code></p>
+
+<p><strong>Example 2:</strong></p>
+
+<p>Request: <code class="java">GET /items/999</code></p>
+
+<p>Status code: <code class="java">404 Not Found</code></p>

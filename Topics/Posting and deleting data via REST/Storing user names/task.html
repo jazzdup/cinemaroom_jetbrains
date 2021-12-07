@@ -1,0 +1,32 @@
+<p><div class="alert alert-warning">This problem is fully supported by version 2021.9 of the EduTools plugin and newer. To avoid possible errors, please make sure that the plugin is updated. Alternatively, you can solve it using the web interface.</div></p>
+
+<p>Implement a program that stores user names. Your program should contain two endpoints:</p>
+
+<ul>
+	<li><code class="language-json">POST /users</code>: takes the query parameter <code class="language-json">name</code> that represents the user name and stores the user name;</li>
+	<li><code class="language-json">GET /users</code>: returns an array of user names in the order they were added. If there are no users returns an empty array.</li>
+</ul>
+
+<p>In both cases, the server should respond with <code class="language-json">200 (OK)</code> status code.</p>
+
+<p><strong>Example 1: </strong>Response for a <code class="language-json">GET /users</code> request:</p>
+
+<pre><code class="language-json">[]
+</code></pre>
+
+<p><strong>Example 2:</strong></p>
+
+<pre><code class="language-no-highlight">POST /users/?name=Alice</code></pre>
+
+<pre><code class="language-no-highlight">POST /users/?name=Kate</code></pre>
+
+<pre><code class="language-no-highlight">POST /users/?name=Someone</code></pre>
+
+<p><strong>Example 3: </strong>Response for a <code class="language-json">GET /users</code> request:</p>
+
+<pre><code class="language-json">[
+   "Alice",
+   "Kate",
+   "Someone"
+]
+</code></pre>

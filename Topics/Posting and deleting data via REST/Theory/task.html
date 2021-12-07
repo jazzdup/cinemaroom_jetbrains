@@ -1,0 +1,109 @@
+<h2>Posting and deleting data via REST</h2>
+<html>
+ <head></head>
+ <body>
+  <p>When users receive data from web applications, they may want to <strong>add </strong>new or <strong>delete </strong>the<strong> </strong>existing data. With <code class="language-java">POST</code> requests users can add new information by sending <strong>values </strong>they want to upload. A <code class="language-java">DELETE</code> request allows users to remove the existing data from an application. When users send <code class="language-java">POST</code> or <code class="language-java">DELETE</code> requests, they are processed by the <code class="language-java">@RestController</code>. The controller takes the appropriate actions depending on the method. In this topic, we will learn how to implement <code class="language-java">POST</code> and <code class="language-java">DELETE</code> methods via <strong>Spring</strong>.</p> 
+  <p>We will use the <a target="_blank" href="https://restfulapi.net/resource-naming/" rel="noopener noreferrer nofollow">REST Resource Naming Guide</a> throughout this topic; it governs standard naming conventions. Use this site if you want to learn more about API namings.</p> 
+  <h5>@PostMapping</h5> 
+  <p>Suppose you want to create an application where users can add names and addresses of the people they know. To add a person to the address book, a user needs to send the data to the server, while the server needs to store it somewhere. To make it possible, implement <code class="language-java">@PostMapping</code> in the <code class="language-java">@RestController</code>.</p> 
+  <p></p>
+  <div class="alert alert-primary">
+   We advise you to use a 
+   <strong>thread-safe object </strong>to work with data in 
+   <code class="language-java">@RestController</code>. The controller can get multiple requests at the same time, and the requests are processed by different threads. If the object is not thread-safe, multiple requests can lead to data loss and other unexpected errors when data is processed with 
+   <code class="language-java">POST</code> or 
+   <code class="language-java">DELETE</code> requests 
+  </div>
+  <p></p> 
+  <p>In our example, we want to store mappings from people to addresses, so use a <code class="language-java">Map</code> object in Java. We can use <code class="language-java">ConcurrentHashMap</code> to implement a thread-safe <code class="language-java">Map</code> in our application:</p> 
+  <pre><code class="language-java">@RestController
+public class AddressController {
+    private ConcurrentMap&lt;String, String&gt; addressBook = new ConcurrentHashMap&lt;&gt;();
+}</code></pre> 
+  <p>With <code class="language-java">ConcurrentHashMap</code> we can set up a <code class="language-java">@PostMapping</code> that takes a person's name and address and adds them to the <code class="language-java">Map</code>. Since the user wants to send data with a <code class="language-java">POST</code> request, we need to use a <code class="language-java">@RequestParam</code> to send the data with a <code class="language-java">POST</code> request. </p> 
+  <p><code class="language-java">@RequestParam</code> is a <strong>variable</strong> provided by a user in the <strong>query parameters</strong>. It is used during handling of <code class="language-java">POST</code> requests. <code class="language-java">@RequestParam</code> can be provided in two ways:</p> 
+  <ol> 
+   <li>In the query parameters section of a REST request. In Postman, it can be found in the <strong>Params</strong> section, labeled as <strong>Query Params</strong>;</li> 
+   <li>In the URL path, in the following format: <code class="language-java">localhost:&lt;port&gt;/&lt;ApiPath&gt;/?&lt;Param&gt;=&lt;value&gt;&amp;&lt;Param&gt;=&lt;value&gt;</code>.</li> 
+  </ol> 
+  <p>In the examples below, the Spring port is set to 8080, so all <code class="language-java">POST</code> and <code class="language-java">DELETE</code> requests are made at <code class="language-java">localhost:8080</code>.</p> 
+  <p>When we provide a parameter through the query parameters, we need to set a name and a value. The name of the parameter should match the name of the <code class="language-java">@RequestParam</code>, and the value should be the same type as the <code class="language-java">@RequestParam</code> variable. The following code is an example of how <code class="language-java">@RequestParam</code> can be used with <code class="language-java">@PostMapping</code> to add the data to the address book:</p> 
+  <pre><code class="language-java">@RestController
+public class AddressController {
+    private ConcurrentMap&lt;String, String&gt; addressBook = new ConcurrentHashMap&lt;&gt;();
+	
+    @PostMapping("/addresses")
+    public void postAddress(@RequestParam String name, @RequestParam String address) {
+        addressBook.put(name, address);
+    }		
+}</code></pre> 
+  <p>In this <code class="language-java">@PostMapping</code>, we expect two <code class="language-java">@RequestParam</code> with a request. The first is the name of the <code class="language-java">String</code> type. The second is the address, also of the <code class="language-java">String</code> type. When users send a <code class="language-java">POST</code> request to the <code class="language-java">/addresses</code> path, they provide two parameters in the request body. When the request is sent, the name and address are added to <code class="language-java">ConcurrentHashMap</code>.</p> 
+  <p style="text-align: center;"><img alt="" src="https://ucarecdn.com/9d072ad5-e5c7-465f-aa10-3cac2fe1fc4c/"></p> 
+  <p>To test whether the <code class="language-java">POST</code> was a success, you can implement a <code class="language-java">GET</code> request that returns a requested address based on the provided name:</p> 
+  <pre><code class="language-java">@RestController
+public class AddressController {
+    private ConcurrentMap&lt;String, String&gt; addressBook = new ConcurrentHashMap&lt;&gt;();
+	
+    @PostMapping("/addresses")
+    public void postAddress(@RequestParam String name, @RequestParam String address) {
+        addressBook.put(name, address);
+    }		
+	
+    @GetMapping("/addresses/{name}")
+    public String getAddress(@PathVariable String name) {
+        return addressBook.get(name);
+    }
+}</code></pre> 
+  <p>In the previous <code class="language-java">POST</code> request, we have added <code class="language-java">Bob</code> that is mapped to <code class="language-java">123 Younge Street</code>. Now, if we send a request to <code class="language-java">/addresses/Bob</code>, we expect to get <code class="language-java">123 Younge Street</code> as shown below:</p> 
+  <p style="text-align: center;"><img alt="" src="https://ucarecdn.com/5bcd91d4-8091-456f-9bbb-86eed08bae22/"></p> 
+  <p>But what happens when a parameter is either missing or invalid? A user will receive <code class="language-java">400 Bad Request</code> as shown below:</p> 
+  <p style="text-align: center;"><img alt="" src="https://ucarecdn.com/648621f4-47eb-4c19-86fe-f35a2a34d643/"></p> 
+  <p>If this error occurs, reexamine the parameters to make sure that they are correct.</p> 
+  <h5>@DeleteMapping</h5> 
+  <p>Apart from adding new data, sometimes users need to delete some data too. In our address book, we may want to delete a name if it is no longer required. In this situation, we can use <code class="language-java">@DeleteMapping</code> to send a request to delete some portion of our data.</p> 
+  <p>Using <code class="language-java">@RequestParam</code> we can pass a parameter to the <code class="language-java">@DeleteMapping</code> handler. The parameter that needs to be passed in our example is the name of the person we want to delete. Once the name has been provided, we can remove the value from the <code class="language-java">Map</code> and return a message to indicate that it has been successfully deleted:</p> 
+  <pre><code class="language-java">@RestController
+public class AddressController {
+    private ConcurrentMap&lt;String, String&gt; addressBook = new ConcurrentHashMap&lt;&gt;();
+
+    @DeleteMapping("/addresses")
+    public String removeAddress(@RequestParam String name) {
+        addressBook.remove(name);
+        return name + " removed from address book!";
+    }
+}</code></pre> 
+  <p>To verify that the mapping has been removed, we can send a <code class="language-java">GET</code> to return the contents of the <code class="language-java">addressBook</code> variable. Take a look at the snippet below. It shows the whole controller:</p> 
+  <pre><code class="language-java">@RestController
+public class AddressController {
+    private ConcurrentMap&lt;String, String&gt; addressBook = new ConcurrentHashMap&lt;&gt;();
+	
+    @PostMapping("/addresses")
+    public void postAddress(@RequestParam String name, @RequestParam String address) {
+        addressBook.put(name, address);
+    }		
+	
+    @GetMapping("/addresses")
+    public ConcurrentMap&lt;String, String&gt; getAddressBook() {
+        return addressBook;
+    }
+	
+    @DeleteMapping("/addresses")
+    public String removeAddress(@RequestParam String name) {
+        addressBook.remove(name);
+        return name + " removed from address book!";
+    }
+}</code></pre> 
+  <p>Once <code class="language-java">@DeleteMapping</code> has been established, we only need to send a <code class="language-java">DELETE</code> request to the <code class="language-java">/addresses</code> URL with the address we want to delete in the query parameters. To test this, let's first populate our <code class="language-java">Map</code> with data. To do this, we can send a few <code class="language-java">POST</code> requests to the web application. Consider the following two <code class="language-java">POST</code> requests:</p> 
+  <ul> 
+   <li><code class="language-java">localhost:8080/addresses?name=Bob&amp;address=123 Younge Street</code></li> 
+   <li><code class="language-java">localhost:8080/addresses?name=Alice&amp;address=200 Rideau Street</code></li> 
+  </ul> 
+  <p>This will add two entries to the <code class="language-java">Map</code>, the first is <code class="language-java">Bob</code> living on <code class="language-java">123 Younge Street</code>. The second is <code class="language-java">Alice</code> living on <code class="language-java">200 Rideau Street</code>. We can verify whether the entries were added with a <code class="language-java">GET</code> request to <code class="language-java">/addresses</code>.</p> 
+  <p>Now, suppose that we want to delete the entry associated with <code class="language-java">Bob</code>. We need to send a <code class="language-java">DELETE</code> request to the <code class="language-java">/addresses</code> mapping, passing the name parameter with the <code class="language-java">Bob</code> value.</p> 
+  <p style="text-align: center;"><img alt="" src="https://ucarecdn.com/49688955-e89d-4984-8ac6-9ffd4ea405f2/"></p> 
+  <p>Once the data has been removed, we can verify that the request has been completed successfully by sending another <code class="language-java">GET</code> request for the whole <code class="language-java">Map</code>. As a result, the value for <span style="color: #000000;">Bob</span> is removed from the <code class="language-java">Map</code>:</p> 
+  <p style="text-align: center;"><img alt="" src="https://ucarecdn.com/78e1762b-3a5d-4bee-8d15-16646ef75f84/"></p> 
+  <h5>Conclusion</h5> 
+  <p>In this topic, we have discussed how we can add and remove data with <code class="language-java">POST</code> and <code class="language-java">DELETE</code> requests. With <code class="language-java">@RequestBody</code> annotation, it is possible to send data through the body of the <code class="language-java">REST</code> request, rather than through the path as with <code class="language-java">@PathVariable</code>. When we work with the stored data in a <code class="language-java">@RestController</code>, it is important to remember that the application can process multiple requests at once. So, it is essential to implement thread-safe objects. They ensure that no thread-related data errors occur. When you work with <code class="language-java">@RequestParam</code>, remember that the <code class="language-java">400 Bad Request</code> error will occur if parameters are missing or incorrect. Review the parameters if you happen to see this error. Make sure that none of them are incorrect or missing. This will help you with building complex but steady REST APIs that can handle user input.</p>
+ </body>
+</html>

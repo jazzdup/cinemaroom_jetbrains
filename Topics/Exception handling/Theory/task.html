@@ -1,0 +1,118 @@
+<h2>Exception handling</h2>
+<html>
+ <head></head>
+ <body>
+  <p>Returning errors to a user is crucial during web application development. When users send an incorrect request that cannot be processed or want to get information on a non-existing object, your web application should let them know what is wrong. There are different general HTTP status codes, for example, <code class="language-json">400</code> for <code class="language-json">Bad Request</code> or <code class="language-json">404</code> for <code class="language-json">Not Found</code>. Handling errors is very important, as it allows users to understand what is wrong right away.</p> 
+  <p>Here you will find two ways to return an error message in Spring Boot applications. You can either use the <code class="language-json">ResponseStatusException</code> Spring class or create your own exception using the <code class="language-json">@ResponseStatus</code> annotation. Let's write a simple code and show how it works. </p> 
+  <h5>Controller preparation</h5> 
+  <p>Imagine a web app that returns information about a flight by its number. It would look like this in JSON:</p> 
+  <pre><code class="language-json">{
+  "from": "Berlin Tegel",
+  "to": "Stuttgart",
+  "gate": "D80"
+}</code></pre> 
+  <p>In the example below, we create a simple <code class="language-json">FlightInfo</code> class with information about the airport, city, and gate. We do not provide the flight date and time for the sake of brevity:</p> 
+  <pre><code class="language-java">public class FlightInfo {
+
+    private String from;
+    private String to;
+    private String gate;
+ 
+    // constructor
+ 
+    // getters and setters
+ 
+}</code></pre> 
+  <p>Now we can implement a simple <code class="language-json">FlightController</code> controller with a list of flights. We will also use a method that returns a <code class="language-json">FlightInfo</code> object from the <code class="language-json">flightInfoList</code> list to get information about the specific flight:</p> 
+  <pre><code class="language-java">@RestController
+public class FlightController {
+
+    private static final List&lt;FlightInfo&gt; flightInfoList;
+
+    static {
+        flightInfoList = new ArrayList&lt;&gt;();
+        flightInfoList.add(new FlightInfo("Delhi Indira Gandhi", "Stuttgart", "D80"));
+        flightInfoList.add(new FlightInfo("Tokyo Haneda", "Frankfurt", "110"));
+        flightInfoList.add(new FlightInfo("Kilimanjaro Arusha", "Boston", "15"));
+        flightInfoList.add(new FlightInfo("Berlin Schönefeld", "Tenerife", "15"));
+    }
+
+    @GetMapping("flights/{id}")
+    public static FlightInfo getFlightInfo(@PathVariable int id) {
+        return flightInfoList.get(id);
+    }
+
+}</code></pre> 
+  <p>Finally, we are ready to focus on handling exceptions!</p> 
+  <h5>ResponseStatusException</h5> 
+  <p>The first way to return an error is to use the <code class="language-json">ResponseStatusException</code> class introduced in Spring 5 for basic error handling. It's <code class="language-json">RuntimeException</code> and that's why we don't need to add it to a method signature. </p> 
+  <p>There are three constructors in Spring to generate <code class="language-json">ResponseStatusException</code>:</p> 
+  <pre><code class="language-java">ResponseStatusException(HttpStatus status)
+ResponseStatusException(HttpStatus status, java.lang.String reason)
+ResponseStatusException(
+        HttpStatus status, 
+        java.lang.String reason, 
+        java.lang.Throwable cause
+)</code></pre> 
+  <p>We have created an instance providing <code class="language-json">HttpStatus</code> and, optionally, the reason and cause. The reason is a simple message that explains the exception. The cause is a nested exception. </p> 
+  <p>So, what <code class="language-json">HttpStatus</code> types are there? The most common are <code class="language-json">200 OK</code>, <code class="language-json">404 NOT_FOUND</code>, <code class="language-json">400 BAD_REQUEST</code>, <code class="language-json">403 FORBIDDEN</code>, and <code class="language-json">500 INTERNAL_SERVER_ERROR</code>. </p> 
+  <p>Let's change our <code class="language-json">getFlightInfo</code> method and write a code that generates an instance of <code class="language-json">ResponseStatusException</code>. Let's say users are looking for some information about a flight from the Berlin Schönefeld airport, but the airport is closed for maintenance. In this situation, we should return <code class="language-json">ResponseStatusException</code> with <code class="language-json">BAD_REQUEST</code> status and reason message:</p> 
+  <pre><code class="language-java">@GetMapping("flights/{id}")
+public static FlightInfo getFlightInfo(@PathVariable int id) {
+    FlightInfo flightInfo = flightInfoList.get(id);
+    if (Objects.equals(flightInfo.getFrom(), "Berlin Schönefeld")) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                "Berlin Schönefeld is closed for service today");
+    }
+    return flightInfo;
+}</code></pre> 
+  <p>If we try to test it, we will see the standard error info format as a response:</p> 
+  <p style="text-align: center;"><img alt="" height="435" src="https://ucarecdn.com/724871e9-bfda-4306-9e6e-a5be01d28277/" width="571"></p> 
+  <p>This JSON instance provides more information about the situation than a specified message — the timestamp, error name, status code, and the REST path of the request.</p> 
+  <p>Let's talk about the pros and cons of <code class="language-json">ResponseStatusException</code>. </p> 
+  <p>It has many benefits, allowing us to:</p> 
+  <ul> 
+   <li> <p>process exceptions of the same type separately;</p> </li> 
+   <li> <p>set different status codes for the response;</p> </li> 
+   <li> <p>avoid creating any additional exception classes;</p> </li> 
+   <li> <p>throw an exception at any place;</p> </li> 
+  </ul> 
+  <p>The disadvantage is the code duplication since we have to write the same code in several controllers.</p> 
+  <p></p>
+  <div class="alert alert-warning">
+   If your application throws an uncaught exception like 
+   <code class="language-json">RuntimeException</code> or any other that doesn't have explicit details on the HTTP code, it will be converted to 
+   <code class="language-json">500 Internal Server Error</code>. This status code indicates that something is bad with your server, and it should be fixed because the user requests cannot be processed properly.
+  </div>
+  <p></p> 
+  <h5>Custom exceptions</h5> 
+  <p>It is also possible to set the response code and status for the custom exception. We can write a class that extends <code class="language-json">RuntimeException</code> and add the <code class="language-json">@ResponseStatus</code> annotation to the exception like this:</p> 
+  <pre><code class="language-java">@ResponseStatus(code = HttpStatus.BAD_REQUEST)
+class FlightNotFoundException extends RuntimeException {
+    
+    public FlightNotFoundException(String cause) {
+        super(cause);
+    }
+}</code></pre> 
+  <p>Now, we can throw this exception in the same way as <code class="language-json">ResponseStatusException</code>. The status will be set automatically.</p> 
+  <p>For example, in the flight controller:</p> 
+  <pre><code class="language-java">@GetMapping("flights/{id}")
+public FlightInfo getFlightInfo(@PathVariable int id) {
+    if (id &gt; flightInfoList.size()) {
+        throw new FlightNotFoundException("Flight not found for id =" + id);
+    }
+    return flightInfoList.get(id);
+}</code></pre> 
+  <p>If we test this exception with a nonexistent <code class="language-json">id=1111</code>, we get a response with the new status code <code class="language-json">400</code>.</p> 
+  <p style="text-align: center;"><img alt="" height="409" src="https://ucarecdn.com/c8d7200b-4d5c-4bcf-b5a5-8a0a8cf60f54/" width="682"></p> 
+  <p>The main advantage is that we can create our own specific exceptions and keep our code more readable.</p> 
+  <p>On the other hand, custom exceptions require implementing additional classes.</p> 
+  <h5>Conclusion</h5> 
+  <p>Remember that bad exception processing may result in bugs and low readability. We have considered two ways of handling exceptions in Spring. Now you can: </p> 
+  <ul> 
+   <li> <p>throw <code class="language-json">ResponseStatusException</code> </p> </li> 
+   <li> <p>create custom exceptions using the <code class="language-json">@ResponseStatus</code> annotation and throw them like <code class="language-json">ResponseStatusException</code></p> </li> 
+  </ul> 
+  <p>Each way has its advantages and disadvantages. Use the second option for specific exceptions or the first one to avoid additional exception classes.</p>
+ </body>
+</html>
